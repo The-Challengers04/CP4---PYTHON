@@ -19,8 +19,15 @@ def adicionarPedido(pedido, vinho, quantidade, caixaOuGarrafa):
     elif caixaOuGarrafa == 2:
         pedido[vinho] = pedido.get(vinho, 0) + quantidade * 6
         print(f"{quantidade} {vinho} adicionado(s) ao pedido.")
-        
-        
+
+def valorTotalPedido(pedido):
+    total = 0
+    precos = {'vinho1':90, 'vinho2':110.90, 'vinho3':87.60, 'vinho4': 99.90}
+    for item, quantidade in pedido.items():
+        if item in precos:
+            total =+ quantidade * precos[item]
+    return total
+       
         
 def main():
     estoque = {'vinho1':10, 'vinho2':15, 'vinho3':12, 'vinho4':13}
@@ -38,21 +45,32 @@ def main():
                    while True:
                       try:
                           print('----------- MENU -----------')
-                          clienteMenu = int(input('Faça seu pedido!\n1- Adicionar vinho ao pedido\n2- Finalizar pedido\n3- sair\nEscolha uma opção: ')) 
+                          clienteMenu = int(input('Faça seu pedido!\n1- Adicionar vinho ao pedido\n2- Finalizar pedido\n3- Voltar\nEscolha uma opção: ')) 
                           match clienteMenu:  
-                              case 1: 
-                                     
+                              case 1:     
                                      try:
                                          print('Escolha se deseja comprar garrafas ou caixas')
-                                         caixaOuGarrafa = int(input('1- Garrafas\n2- Caixas\nEscolha uma opção: '))
-                                         #if caixaOuGarrafa == 1 or caixaOuGarrafa == n2:
+                                         while True:
+                                            caixaOuGarrafa = int(input('1- Garrafas\n2- Caixas\nEscolha uma opção: '))
+                                            if caixaOuGarrafa == 1 or caixaOuGarrafa == 2:
+                                                for vinho, quantidade in estoque.items():
+                                                    print(f'{vinho} - quantidade {quantidade}')
+                                                vinho = input("Informe o vinho desejado: ")
+                                                quantidade = int(input("Informe a quantidade desejada: "))
+                                                adicionarPedido(pedido, vinho, quantidade, caixaOuGarrafa)
+                                                break
+                                            else: 
+                                                print('Digite uma opção válida.')
                                      except ValueError:
-                                         print('Opção inválida')
-                                     vinho = input("Informe o vinho desejado: ")
-                                     quantidade = int(input("Informe a quantidade desejada: "))
-                                     adicionarPedido(estoque, vinho, quantidade, caixaOuGarrafa)
+                                         print('Opção inválida')    
                               case 2: 
-                                  break 
+                                  subtotalPedido = valorTotalPedido(pedido)
+                                  print('Resumo do seu pedido:')
+                                  for vinho, quantidade in pedido.items():
+                                      print(f'{vinho} - {quantidade}')
+                                  print(f'O subtotal do seu pedido é de: {subtotalPedido}')                          
+
+                                  print
                               case 3:
                                   break  
                                      
@@ -62,14 +80,11 @@ def main():
                           print('Opção inválida')
                case 2:  
                    break
-               case 4:  
+               case 3:  
                    break  
                case other: 
                    print('Digite uma opção válida') 
        except ValueError:
            print('Opção inválida')
-
-
-
 
 main()
