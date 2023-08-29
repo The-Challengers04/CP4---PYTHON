@@ -1,3 +1,4 @@
+quantidade = 0
 def registrarEntrada(estoque, vinho, quantidade):
     if vinho in estoque:
         estoque[vinho] += quantidade
@@ -27,10 +28,13 @@ def valorTotalPedido(pedido):
         if item in precos:
             total =+ quantidade * precos[item]
     return total
+
+def calculafrete():
+    frete = valorTotalPedido*0.1 + quantidade * 10
        
         
 def main():
-    estoque = {'vinho1':10, 'vinho2':15, 'vinho3':12, 'vinho4':13}
+    estoque = {'vinho 1: tinto':10, 'vinho 2: rosé':15, 'vinho 3: branco':12, 'vinho 4: frisante':13, 'rolhas': 50, 'rótulos': 70}
     pedido = {}
     precos = {'vinho1':90, 'vinho2':110.90, 'vinho3':87.60, 'vinho4': 99.90}
     caixaOuGarrafa = 0
