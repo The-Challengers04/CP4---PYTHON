@@ -4,6 +4,38 @@ import sys
 # Definindo variáveis globais para quantidade e total
 total = 0
 
+# Definindo o estoque inicial e pedido vazio
+estoque = {
+    'vinho 1: tinto': 10,
+    'vinho 2: rosé': 15,
+    'vinho 3: branco': 12,
+    'vinho 4: frisante': 13,
+    'rolhas': 50,
+    'rótulos': 70,
+    'embalagens': 30  # Adicionando embalagens ao estoque
+}
+
+def mostrarEstoque(estoque):
+    print('----------- Estoque -----------')
+    for item, quantidade in estoque.items():
+        print(f'{item} - quantidade {quantidade}')
+
+# Função para registrar entrada de itens no estoque
+def registrarEntrada(estoque, item, quantidade):
+    if item in estoque:
+        estoque[item] += quantidade
+        print(f"Entrada de {quantidade} {item} registrada!")
+    else:
+        print("Item não identificado.")
+
+# Função para registrar saída de itens do estoque
+def registrarSaida(estoque, item, quantidade):
+    if item in estoque and estoque[item] >= quantidade:
+        estoque[item] -= quantidade
+        print(f"Saida de {quantidade} {item} registrada!")
+    else:
+        print("Estoque insuficiente.")
+
 # Função para registrar entrada de itens no estoque
 def registrarEntrada(estoque, vinho, quantidade):
     if vinho in estoque:
@@ -112,35 +144,30 @@ def main():
                     while True:
                         try:
                             print('----------- MENU -----------')
-                            clienteMenu = int(input('1- Registrar entrada\n2 - Registrar saída\n3- Voltar\nEscolha uma opção: ')) 
-                            
-                            # Utilizando "match" para o menu do funcionário
-                            match clienteMenu:  
-                                case 1:  # Registrar entrada
-                                    try:
-                                        vinho = input("Informe o item que deseja registrar a entrada: 'vinho 1: tinto', 'vinho 2: rosé', 'vinho 3: branco', 'vinho 4: frisante', 'rolhas', 'rótulos")
-                                        quantidade = int(input("Informe a quantidade: "))
-                                        registrarEntrada(estoque, vinho, quantidade)
-                                    except ValueError:
-                                        print('Opção inválida')    
-                                
-                                case 2:  # Registrar saída
-                                    try:
-                                        vinho = input("Informe o item que deseja registrar a saída: ")
-                                        quantidade = int(input("Informe a quantidade: "))
-                                        registrarSaida(estoque, vinho, quantidade)
-                                    except ValueError:
-                                        print('Opção inválida')   
-                                
-                                case 3:  # Voltar
-                                    break 
-                                
-                                case other:  # Opção inválida
-                                    print('Digite uma opção válida') 
-                        
+                            funcionarioMenu = int(input('1- Registrar entrada\n2- Registrar saída\n3- Verificar estoque\n4- Voltar\nEscolha uma opção: '))
+
+                            if funcionarioMenu == 1:
+                                print(estoque)
+                                item = input("Informe o item que deseja registrar a entrada:  ")
+                                quantidade = int(input("Informe a quantidade: "))
+                                registrarEntrada(estoque, item, quantidade)
+                            elif funcionarioMenu == 2:
+                                print(estoque)
+                                item = input("Informe o item que deseja registrar a saída: ")
+                                quantidade = int(input("Informe a quantidade: "))
+                                registrarSaida(estoque, item, quantidade)
+                            elif funcionarioMenu == 3:
+                                mostrarEstoque(estoque)
+                            elif funcionarioMenu == 4:
+                                break
+                            else:
+                                print('Opção inválida')
                         except ValueError:
                             print('Opção inválida')
-                    break
+                            
+                        except ValueError:
+                            print('Opção inválida')
+                        break
                 
                 case 3:  # Sair do programa
                     break  
