@@ -1,391 +1,177 @@
-'''
- Gabriel Machado Belardino - RM550121
-  Ana Beatriz Farah Alvez - RM97865 
- aiky Alvaro de Miranda - RM98118 
- ucas Rodrigues da Silva - RM98344 
- Pedro Henrique Bicas Couto - RM99534
+#import de bibliotecas necessárias
+import json
+from datetime import datetime
 
-'''
+#Lista principal
+tarefas = []
 
-# Importando o módulo sys para uso posterior
-import sys
+#Função para salvar dados no json
+def salvarTarefas():
+    with open('tarefas.json', 'w') as arquivo_json:
+        json.dump(tarefas, arquivo_json)
 
-# Definindo variáveis globais para quantidade e total
-total = 0
+#Função para carregar dados do json
+def carregarTarefas():
+    try:
+        with open('tarefas.json', 'r') as arquivo_json:
+            tarefas.extend(json.load(arquivo_json))
+    except FileNotFoundError:
+        tarefas = []
 
-# Definindo o estoque inicial e pedido vazio
-estoque = {
-    'vinho 1: tinto': 10,
-    'vinho 2: rosé': 15,
-    'vinho 3: branco': 12,
-    'vinho 4: frisante': 13,
-    'rolhas': 50,
-    'rótulos': 70,
-    'embalagens': 30  # Adicionando embalagens ao estoque
-}
+#Função para calcular a completude real
+def calcularCompletudeReal(dataFinal):
+    formato = "%d/%m/%Y"
+    dataFinal = datetime.strptime(dataFinal, formato)
+    dataAtual = datetime.now()
+    
 
-def mostrarEstoque(estoque):
-    print('----------- Estoque -----------')
-    for item, quantidade in estoque.items():
-        print(f'{item} - quantidade {quantidade}')
+    diferencaDias = abs((dataAtual - dataFinal).days)
+    porcentagem_por_dia = 100 / diferencaDias if diferencaDias != 0 else 0
+    
+    return porcentagem_por_dia
 
-# Função para registrar entrada de itens no estoque
-def registrarEntrada(estoque, item, quantidade):
-    if item in estoque:
-        estoque[item] += quantidade
-        print(f"Entrada de {quantidade} {item} registrada!")
+#Função para calcular a completude planejada
+def CalcularCompletudePlanejada(dataInicial, dataFinal):
+    formato = "%d/%m/%Y"
+    
+    data_inicial = datetime.strptime(dataInicial, formato)
+    data_final = datetime.strptime(dataFinal, formato)
+    
+    diferenca_dias = (data_final - data_inicial).days
+    
+    porcentagem_por_dia = 100 / diferenca_dias if diferenca_dias != 0 else 0
+    
+    return porcentagem_por_dia
+
+#Função para verificar se a tarefa está em atraso
+def verificarAtraso(dataFinal):
+    formato = "%d/%m/%Y"
+    
+    dataFinal = datetime.strptime(dataFinal, formato)
+    data_atual = datetime.now()
+    
+    if data_atual.day > dataFinal.day:
+        x = 'Em atraso'
+        return x
     else:
-        print("Item não identificado.")
+        x = 'Em andamento'
+        return x
 
-# Função para registrar saída de itens do estoque
-def registrarSaida(estoque, item, quantidade):
-    if item in estoque and estoque[item] >= quantidade:
-        estoque[item] -= quantidade
-        print(f"Saida de {quantidade} {item} registrada!")
-    else:
-        print("Estoque insuficiente.")
+#Adicionar nova tarefa
+def addTask():
+    nomeTarefa = input('Nome da tarefa: ')
+    dataInicial = input('Data inicial (DD/MM/AAAA): ')
+    dataFinal = input('Data final (DD/MM/AAAA): ')
+    planoAtraso = input('Plano sucinto em caso de atraso: ')
+    completudePlanejada = CalcularCompletudePlanejada(dataInicial, dataFinal)
+    CompletudeReal = calcularCompletudeReal(dataFinal)
+    status = verificarAtraso(dataFinal)
 
-# Função para registrar entrada de itens no estoque
-def registrarEntrada(estoque, vinho, quantidade):
-    if vinho in estoque:
-        estoque[vinho] += quantidade
-        print(f"Entrada de {quantidade} {vinho} registrada!")
-    else:
-        print("Item não identificado.")
-
-# Função para registrar saída de itens do estoque
-def registrarSaida(estoque, vinho, quantidade):
-    if vinho in estoque and estoque[vinho] >= quantidade:
-        estoque[vinho] -= quantidade
-        print(f"Saida de {quantidade} {vinho} registrada!")
-    else:
-        print("Estoque insuficiente.")
-
-# Função para adicionar itens ao pedido
-def adicionarPedido(pedido, estoque, vinho, quantidade, caixaOuGarrafa):
-    if caixaOuGarrafa == 1:
-        if vinho in estoque and estoque[vinho] >= quantidade:
-            pedido[vinho] = pedido.get(vinho, 0) + quantidade
-            print(f"{quantidade} {vinho} adicionado(s) ao pedido.")
+    tarefa = {
+        'nomeTarefa': nomeTarefa,
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        'completudePlanejada': completudePlanejada,
+        'CompletudeReal': CompletudeReal,
+        'planoAtraso': planoAtraso,
+        'status': status
+        }
+    
+    tarefas.append(tarefa)
+    salvarTarefas()
+    
+#Função para remover a tarefa   
+def remTask():
+    print('Tarefas:')
+    for i, tarefa in enumerate(tarefas):
+        print(f'{i + 1}. {tarefa["nomeTarefa"]}')
+    try:
+        indice = int(input('Digite o número da tarefa que deseja remover: ')) - 1
+        if 0 <= indice < len(tarefas):
+            del tarefas[indice]
+            print('Tarefa removida com sucesso!')
+            salvarTarefas()
         else:
-            print("Item não identificado.")
-    elif caixaOuGarrafa == 2:
-        pedido[vinho] = pedido.get(vinho, 0) + quantidade * 6
-        print(f"{quantidade} {vinho} adicionado(s) ao pedido.")
+            print('Índice inválido.')
+    except ValueError:
+        print('Valor inválido. Certifique-se de inserir um número.')
+        
+#Função para atualizar tarefas
+def updateTask():
+    print('Atualizar uma tarefa específica:')
+    for i, task in enumerate(tarefas):
+        print(f'{i + 1}. {task["nomeTarefa"]}')
+    try:
+        num_tarefa = int(input('Digite o número da tarefa que deseja atualizar: ')) - 1
+        if 0 <= num_tarefa < len(tarefas):
+            task = tarefas[num_tarefa]
+            print(f'Tarefa: {task["nomeTarefa"]}')
+            print(f'Data Inicial: {task["dataInicial"]}')
+            print(f'Data Final: {task["dataFinal"]}')
+            print(f'Completude Planejada: {task["completudePlanejada"]}%')
+            print(f'Completude Real: {task["CompletudeReal"]}%')
+            print(f'Status: {task["status"]}')
+            novo_nome = input('Novo nome (deixe em branco para manter o mesmo): ')
+            nova_data_inicial = input('Nova data inicial (DD/MM/AAAA) (deixe em branco para manter a mesma): ')
+            nova_data_final = input('Nova data final (DD/MM/AAAA) (deixe em branco para manter a mesma): ')
+            novo_completude_real = calcularCompletudeReal(nova_data_final) if nova_data_final else task['CompletudeReal']
+            task['nomeTarefa'] = novo_nome if novo_nome else task['nomeTarefa']
+            task['dataInicial'] = nova_data_inicial if nova_data_inicial else task['dataInicial']
+            task['dataFinal'] = nova_data_final if nova_data_final else task['dataFinal']
+            task['CompletudeReal'] = novo_completude_real
 
-# Função para calcular o valor total do pedido
-def valorTotalPedido(pedido, precos):
-    total = 0
-    precos = {'vinho 1: tinto': 90, 'vinho 2: rosé': 110.90, 'vinho 3: branco': 87.60, 'vinho 4: frisante': 99.90}
-    for item, quantidade in pedido.items():
-        if item in precos:
-            total += quantidade * precos[item] 
+            if nova_data_inicial and nova_data_final:
+                task['completudePlanejada'] = CalcularCompletudePlanejada(nova_data_inicial, nova_data_final)
+                task['status'] = verificarAtraso(nova_data_final)
+            print('Tarefa atualizada com sucesso!')
+            salvarTarefas()
+        else:
+            print('Índice inválido.')
+    except ValueError:
+        print('Valor inválido. Certifique-se de inserir um número válido.')
 
-# Função para calcular o valor do frete
-def calcula_frete(pedido, total):
-    quantidade = len(pedido)  # Usar o tamanho do pedido para calcular a quantidade de itens
-    frete = total * 0.1 + quantidade * 10 + 10
-    return frete
+#Função para visualização das tarefas em lista
+def visuTask():
+    print('Visualizar uma tarefa específica:')
+    for i, task in enumerate(tarefas):
+        print(f'{i + 1}. {task["nomeTarefa"]}')
+    try:
+        num_tarefa = int(input('Digite o número da tarefa que deseja visualizar: ')) - 1
+        if 0 <= num_tarefa < len(tarefas):
+            task = tarefas[num_tarefa]
+            print(f'Tarefa: {task["nomeTarefa"]}')
+            print(f'Data Inicial: {task["dataInicial"]}')
+            print(f'Data Final: {task["dataFinal"]}')
+            print(f'Completude Planejada: {task["completudePlanejada"]}%')
+            print(f'Completude Real: {task["CompletudeReal"]}%')
+            print(f'Status: {task["status"]}')
+            print(f'Plano de Atraso: {task["planoAtraso"]}')
+        else:
+            print('Índice inválido.')
+    except ValueError:
+        print('Valor inválido. Certifique-se de inserir um número válido.')
 
-
-# Função principal do programa
+#Função para o menu
 def main():
-    # Definindo o estoque inicial e pedido vazio
-    estoque = {'vinho 1: tinto': 10, 'vinho 2: rosé': 15, 'vinho 3: branco': 12, 'vinho 4: frisante': 13, 'rolhas': 50, 'rótulos': 70}
-    pedido = {}
-    frete = calcula_frete(pedido, total)  # Calculando o frete inicial
-    precos = {'vinho1': 90, 'vinho2': 110.90, 'vinho3': 87.60, 'vinho4': 99.90}
-    caixaOuGarrafa = 0
-
+    carregarTarefas()
     while True:
         try:
-            # Apresentando o menu principal
-            print('----------- MENU -----------')
-            print('Bem vindo a Vinheria Agnello!')
-            mainMenu = int(input('Você é cliente ou funcionário?\n1- Cliente\n2- Funcionário\n3- sair\nEscolha uma opção: '))
-            
-            # Utilizando o switch-like "match" para lidar com as escolhas do menu
-            match mainMenu:
-                case 1:  # Menu do cliente
-                    while True:
-                        try:
-                            print('----------- MENU -----------')
-                            clienteMenu = int(input('Faça seu pedido!\n1- Adicionar vinho ao pedido\n2- Finalizar pedido\n3- Voltar\nEscolha uma opção: '))
-                            
-                            # Utilizando "match" para o menu do cliente
-                            match clienteMenu:
-                                case 1:  # Adicionar vinho ao pedido
-                                    try:
-                                        print('Escolha se deseja comprar garrafas ou caixas')
-                                        while True:
-                                            caixaOuGarrafa = int(input('1- Garrafas\n2- Caixas\nEscolha uma opção: '))
-                                            if caixaOuGarrafa == 1 or caixaOuGarrafa == 2:
-                                                for vinho, quantidade in estoque.items():
-                                                    print(f'{vinho} - quantidade {quantidade}')
-                                                vinho = input("Informe o vinho desejado: (escreva exatamente como está no menu)")
-                                                quantidade = int(input("Informe a quantidade desejada: "))
-                                                adicionarPedido(pedido, estoque, vinho, quantidade, caixaOuGarrafa)
-                                                break
-                                            else: 
-                                                print('Digite uma opção válida.')
-                                    except ValueError:
-                                        print('Opção inválida')    
-                                
-                                case 2:  # Finalizar pedido
-                                    subtotalPedido = valorTotalPedido(pedido, precos)
-                                    calcula_frete(pedido, total)
-                                    print('Resumo do seu pedido:')
-                                    for vinho, quantidade in pedido.items():
-                                        print(f'{vinho} - {quantidade}')
-                                    print(f'O subtotal do seu pedido é de: {subtotalPedido} e seu frete é {frete}')
-                                    exit()                            
-
-                                case 3:  # Voltar
-                                    break 
-                                
-                                case other:  # Opção inválida
-                                    print('Digite uma opção válida') 
-                        
-                        except ValueError:
-                            print('Opção inválida')
-                
-                case 2:  # Menu do funcionário
-                    while True:
-                        try:
-                            print('----------- MENU -----------')
-                            funcionarioMenu = int(input('1- Registrar entrada\n2- Registrar saída\n3- Verificar estoque\n4- Voltar\nEscolha uma opção: '))
-
-                            if funcionarioMenu == 1:
-                                print(estoque)
-                                item = input("Informe o item que deseja registrar a entrada:  ")
-                                quantidade = int(input("Informe a quantidade: "))
-                                registrarEntrada(estoque, item, quantidade)
-                            elif funcionarioMenu == 2:
-                                print(estoque)
-                                item = input("Informe o item que deseja registrar a saída: ")
-                                quantidade = int(input("Informe a quantidade: "))
-                                registrarSaida(estoque, item, quantidade)
-                            elif funcionarioMenu == 3:
-                                mostrarEstoque(estoque)
-                            elif funcionarioMenu == 4:
-                                break
-                            else:
-                                print('Opção inválida')
-                        except ValueError:
-                            print('Opção inválida')
-                            
-                        except ValueError:
-                            print('Opção inválida')
-                        break
-                
-                case 3:  # Sair do programa
-                    break  
-                
-                case other:  # Opção inválida
-                    print('Digite uma opção válida') 
+            print('-' * 40)
+            menu = int(input('Tarefas de modernização da Vinheria Agnello \n Escolha uma opção: \n 1 - Adicionar Tarefa \n 2 - Remover tarefa \n 3 - Atualizar tarefa \n 4 - Visualizar tarefa \n 5 - sair \n'))
+            match menu:
+                case 1: 
+                    addTask()
+                case 2: 
+                    remTask()
+                case 3: 
+                    updateTask()
+                case 4:
+                    visuTask()
+                case 5:
+                    break
+                case other: 
+                    print('Opção inválida')  
         except ValueError:
-            print('Opção inválida')
-
-# Chamando a função principal para iniciar o programa
-main()
-
-
-meu_dicionario = {"chave1": "valor1", "chave2": "valor2", "chave3": "valor3"}
-
-numero_de_itens = len(meu_dicionario)
-print("Número de itens no dicionário:", numero_de_itens)
-'''
-<li> Gabriel Machado Belardino - RM550121</li>
-<li> Ana Beatriz Farah Alvez - RM97865 </li>
-<li> Kaiky Alvaro de Miranda - RM98118 </li>
-<li> Lucas Rodrigues da Silva - RM98344 </li>
-<li> Pedro Henrique Bicas Couto - RM99534 </li>
-'''
-
-# Importando o módulo sys para uso posterior
-import sys
-
-# Definindo variáveis globais para quantidade e total
-total = 0
-
-# Definindo o estoque inicial e pedido vazio
-estoque = {
-    'vinho 1: tinto': 10,
-    'vinho 2: rosé': 15,
-    'vinho 3: branco': 12,
-    'vinho 4: frisante': 13,
-    'rolhas': 50,
-    'rótulos': 70,
-    'embalagens': 30  # Adicionando embalagens ao estoque
-}
-
-def mostrarEstoque(estoque):
-    print('----------- Estoque -----------')
-    for item, quantidade in estoque.items():
-        print(f'{item} - quantidade {quantidade}')
-
-# Função para registrar entrada de itens no estoque
-def registrarEntrada(estoque, item, quantidade):
-    if item in estoque:
-        estoque[item] += quantidade
-        print(f"Entrada de {quantidade} {item} registrada!")
-    else:
-        print("Item não identificado.")
-
-# Função para registrar saída de itens do estoque
-def registrarSaida(estoque, item, quantidade):
-    if item in estoque and estoque[item] >= quantidade:
-        estoque[item] -= quantidade
-        print(f"Saida de {quantidade} {item} registrada!")
-    else:
-        print("Estoque insuficiente.")
-
-# Função para registrar entrada de itens no estoque
-def registrarEntrada(estoque, vinho, quantidade):
-    if vinho in estoque:
-        estoque[vinho] += quantidade
-        print(f"Entrada de {quantidade} {vinho} registrada!")
-    else:
-        print("Item não identificado.")
-
-# Função para registrar saída de itens do estoque
-def registrarSaida(estoque, vinho, quantidade):
-    if vinho in estoque and estoque[vinho] >= quantidade:
-        estoque[vinho] -= quantidade
-        print(f"Saida de {quantidade} {vinho} registrada!")
-    else:
-        print("Estoque insuficiente.")
-
-# Função para adicionar itens ao pedido
-def adicionarPedido(pedido, estoque, vinho, quantidade, caixaOuGarrafa):
-    if caixaOuGarrafa == 1:
-        if vinho in estoque and estoque[vinho] >= quantidade:
-            pedido[vinho] = pedido.get(vinho, 0) + quantidade
-            print(f"{quantidade} {vinho} adicionado(s) ao pedido.")
-        else:
-            print("Item não identificado.")
-    elif caixaOuGarrafa == 2:
-        pedido[vinho] = pedido.get(vinho, 0) + quantidade * 6
-        print(f"{quantidade} {vinho} adicionado(s) ao pedido.")
-
-# Função para calcular o valor total do pedido
-def valorTotalPedido(pedido, precos):
-    total = 0
-    precos = {'vinho 1: tinto': 90, 'vinho 2: rosé': 110.90, 'vinho 3: branco': 87.60, 'vinho 4: frisante': 99.90}
-    for item, quantidade in pedido.items():
-        if item in precos:
-            total += quantidade * precos[item] 
-
-# Função para calcular o valor do frete
-def calcula_frete(pedido, total):
-    quantidade = len(pedido)  # Usar o tamanho do pedido para calcular a quantidade de itens
-    frete = total * 0.1 + quantidade * 10 + 10
-    return frete
-
-
-# Função principal do programa
-def main():
-    # Definindo o estoque inicial e pedido vazio
-    estoque = {'vinho 1: tinto': 10, 'vinho 2: rosé': 15, 'vinho 3: branco': 12, 'vinho 4: frisante': 13, 'rolhas': 50, 'rótulos': 70}
-    pedido = {}
-    frete = calcula_frete(pedido, total)  # Calculando o frete inicial
-    precos = {'vinho1': 90, 'vinho2': 110.90, 'vinho3': 87.60, 'vinho4': 99.90}
-    caixaOuGarrafa = 0
-
-    while True:
-        try:
-            # Apresentando o menu principal
-            print('----------- MENU -----------')
-            print('Bem vindo a Vinheria Agnello!')
-            mainMenu = int(input('Você é cliente ou funcionário?\n1- Cliente\n2- Funcionário\n3- sair\nEscolha uma opção: '))
+            print('Opção inválida')  
             
-            # Utilizando o switch-like "match" para lidar com as escolhas do menu
-            match mainMenu:
-                case 1:  # Menu do cliente
-                    while True:
-                        try:
-                            print('----------- MENU -----------')
-                            clienteMenu = int(input('Faça seu pedido!\n1- Adicionar vinho ao pedido\n2- Finalizar pedido\n3- Voltar\nEscolha uma opção: '))
-                            
-                            # Utilizando "match" para o menu do cliente
-                            match clienteMenu:
-                                case 1:  # Adicionar vinho ao pedido
-                                    try:
-                                        print('Escolha se deseja comprar garrafas ou caixas')
-                                        while True:
-                                            caixaOuGarrafa = int(input('1- Garrafas\n2- Caixas\nEscolha uma opção: '))
-                                            if caixaOuGarrafa == 1 or caixaOuGarrafa == 2:
-                                                for vinho, quantidade in estoque.items():
-                                                    print(f'{vinho} - quantidade {quantidade}')
-                                                vinho = input("Informe o vinho desejado: (escreva exatamente como está no menu)")
-                                                quantidade = int(input("Informe a quantidade desejada: "))
-                                                adicionarPedido(pedido, estoque, vinho, quantidade, caixaOuGarrafa)
-                                                break
-                                            else: 
-                                                print('Digite uma opção válida.')
-                                    except ValueError:
-                                        print('Opção inválida')    
-                                
-                                case 2:  # Finalizar pedido
-                                    subtotalPedido = valorTotalPedido(pedido, precos)
-                                    calcula_frete(pedido, total)
-                                    print('Resumo do seu pedido:')
-                                    for vinho, quantidade in pedido.items():
-                                        print(f'{vinho} - {quantidade}')
-                                    print(f'O subtotal do seu pedido é de: {subtotalPedido} e seu frete é {frete}')
-                                    exit()                            
-
-                                case 3:  # Voltar
-                                    break 
-                                
-                                case other:  # Opção inválida
-                                    print('Digite uma opção válida') 
-                        
-                        except ValueError:
-                            print('Opção inválida')
-                
-                case 2:  # Menu do funcionário
-                    while True:
-                        try:
-                            print('----------- MENU -----------')
-                            funcionarioMenu = int(input('1- Registrar entrada\n2- Registrar saída\n3- Verificar estoque\n4- Voltar\nEscolha uma opção: '))
-
-                            if funcionarioMenu == 1:
-                                print(estoque)
-                                item = input("Informe o item que deseja registrar a entrada:  ")
-                                quantidade = int(input("Informe a quantidade: "))
-                                registrarEntrada(estoque, item, quantidade)
-                            elif funcionarioMenu == 2:
-                                print(estoque)
-                                item = input("Informe o item que deseja registrar a saída: ")
-                                quantidade = int(input("Informe a quantidade: "))
-                                registrarSaida(estoque, item, quantidade)
-                            elif funcionarioMenu == 3:
-                                mostrarEstoque(estoque)
-                            elif funcionarioMenu == 4:
-                                break
-                            else:
-                                print('Opção inválida')
-                        except ValueError:
-                            print('Opção inválida')
-                            
-                        except ValueError:
-                            print('Opção inválida')
-                        break
-                
-                case 3:  # Sair do programa
-                    break  
-                
-                case other:  # Opção inválida
-                    print('Digite uma opção válida') 
-        except ValueError:
-            print('Opção inválida')
-
-# Chamando a função principal para iniciar o programa
 main()
-
-
-meu_dicionario = {"chave1": "valor1", "chave2": "valor2", "chave3": "valor3"}
-
-numero_de_itens = len(meu_dicionario)
-print("Número de itens no dicionário:", numero_de_itens)
